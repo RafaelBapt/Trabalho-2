@@ -1,5 +1,4 @@
-﻿using Trabalho_2.Control;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
@@ -13,9 +12,9 @@ namespace Trabalho_2
 {
     public partial class Form1 : Form
     {
-        char[,] mJogo = new char[3, 3];
-        List<string> lCoords = new List<string>();
-        List<string> lStringsValidas = new List<string>();
+        char[,] mJogo = new char[3, 3]; //Controla a matriz do jogo, para fácil acesso na hora de procurar as letras.
+        List<string> lCoords = new List<string>(); //Controla a lista de coordenadas que ja foram utilizadas
+        List<string> lStringsValidas = new List<string>(); //Controla a lista de "palavras" que foram pontuadas.
 
         public Form1()
         {
@@ -25,7 +24,7 @@ namespace Trabalho_2
        
         private void Form1_Load(object sender, EventArgs e)
         {
-            NewGame();
+            NewGame(); //Inicia um novo jogo do zero
         }
 
        
@@ -34,13 +33,13 @@ namespace Trabalho_2
         private void btnNewGame_Click(object sender, EventArgs e)
         {
 
-            NewGame();
+            NewGame(); // Serve para reiniciar as pontuações, resetando o jogo.
 
         }
 
         private void btnReset_Click(object sender, EventArgs e)
         {
-            NewGamePlus();
+            NewGamePlus(); //Reinicia a grid sem apagar as pontuações
 
         }
 
@@ -103,40 +102,45 @@ namespace Trabalho_2
         }
         private void btnConfirm_Click(object sender, EventArgs e)
         {
-            if (txtProcura.Text.Length > 0)
+            if (txtProcura.Text.Length > 0) //Se não tiver texto, não é necessário fazer nada
             {
-                string sStringPontuacao = "";
-                int iPontos = CalculaPontos(txtProcura.Text, out sStringPontuacao);
-                TabelaPontos(iPontos, false);
-                txtProcura.Text = "";
-                ClearSelectedCoordinates();
+                int iPontos = CalculaPontos(txtProcura.Text); //manda a palavra para o algoritmo de cálculo de pontuação.
+                TabelaPontos(iPontos, false); //atualiza a tabela de pontos
+                txtProcura.Text = ""; //reseta a textbox
+                ClearSelectedCoordinates(); //limpa os botões que foram selecionados mas não foram utilizados
             }
 
         }
 
+
+        /// <summary>
+        /// Função para atualizar a tabela de pontos da tela, recebe a quantidade de pontos ganhas na ultima rodada (iPontos) e um bool marcando se a tabela será reiniciada (bReset)
+        /// </summary>
+        /// <param name="iPontos"></param>
+        /// <param name="bReset"></param>
         private void TabelaPontos(int iPontos, bool bReset)
         {
-            int iPontosFinal = 0;
+            int iPontosFinal = 0; //variável para guardar a pontuação total.
             try
             {
-                iPontosFinal = iPontos + Convert.ToInt32(lblPontos.Text);
+                iPontosFinal = iPontos + Convert.ToInt32(lblPontos.Text);//adicionando a pontuação nova à anterior.
 
             }
             catch (Exception e)
             {
-                MessageBox.Show(e.Message);
+                MessageBox.Show(e.Message); //em caso de erro, avisa numa janela de erro.
             }
 
             if (bReset)
             {
-                lblPontos.Text = "0";
+                lblPontos.Text = "0"; //se o jogo foi reiniciado, a pontuação volta a 0.
             }
             else
             {
                 lblPontos.Text = iPontosFinal.ToString();
             }
             string sTemp = "";
-            for (int i = 0; i < lStringsValidas.Count; i++)
+            for (int i = 0; i < (lStringsValidas.Count>14?14:lStringsValidas.Count); i++) //O máximo de linhas que a tela suporta é 14, por isso limitamos a quantidade que será mostrada.
             {
                 sTemp = sTemp + lStringsValidas[i] + "\n";
             }
@@ -144,7 +148,9 @@ namespace Trabalho_2
         }
 
        
-
+        /// <summary>
+        /// Função para reiniciaro estado dos botões, caso necessário.
+        /// </summary>
         private void ClearSelectedCoordinates()
         {
             if (btn00.ForeColor == Color.Green)
@@ -191,33 +197,36 @@ namespace Trabalho_2
             {
                 btn22.ForeColor = SystemColors.ControlText;
             }
-
-
         }
 
 
-        private int CalculaPontos(string sPalavra, out string sStringPontuacao)
+        /// <summary>
+        /// Função para calcular os pontos do jogo, recebe a string que o usuário selecionou (sPalavra)
+        /// </summary>
+        /// <param name="sPalavra"></param>
+        /// <returns></returns>
+        private int CalculaPontos(string sPalavra)
         {
-            string sLastCoord = ProcuraLetra(sPalavra.Substring(0, 1));
-            int iTotalLetras = 0;
-            sStringPontuacao = "";
-            if (sLastCoord == "-1" || lCoords.Contains(sLastCoord))
+            string sLastCoord = ProcuraLetra(sPalavra.Substring(0, 1));//checa se é possível pegar a primeira letra
+            int iTotalLetras = 0; //variavel para auxilio da pontuação (2 letras = 1 ponto)
+            string sStringPontuacao = ""; //variavel para auxilio da string que será aceita na pontuação
+            if (sLastCoord == "-1" || lCoords.Contains(sLastCoord))//se não foi possível, ou ela já foi utilizada nessa rodada, termina.
             {
                 return iTotalLetras;
             }
             else
             {
-                iTotalLetras++;
-                FechaBotao(sLastCoord);
+                iTotalLetras++; 
+                FechaBotao(sLastCoord); //desabilita o botão, já que a letra foi aceita
 
-                sStringPontuacao = sPalavra.Substring(0, 1);
-                lCoords.Add(sLastCoord);
+                sStringPontuacao = sPalavra.Substring(0, 1); //adiciona a letra à string da pontuação
+                lCoords.Add(sLastCoord);//adiciona a coordenada às coordenadas já utilizadas
             }
             string sNewCoord;
             for (int i = 1; i < sPalavra.Length; i++)
             {
-                sNewCoord = ProcuraLetra(sPalavra.Substring(i, 1));
-                if (!lCoords.Contains(sNewCoord) && sNewCoord != "-1" && ChecaCoordenadas(sLastCoord, sNewCoord))
+                sNewCoord = ProcuraLetra(sPalavra.Substring(i, 1));//checa se a letra está na matriz
+                if (!lCoords.Contains(sNewCoord) && sNewCoord != "-1" && ChecaCoordenadas(sLastCoord, sNewCoord))//se ela não estiver na lista de letras já utilizadas, e se for possível mover para ela, é aceita
                 {
                     FechaBotao(sNewCoord);
                     sLastCoord = sNewCoord;
@@ -237,11 +246,15 @@ namespace Trabalho_2
 
             if (sStringPontuacao.Length > 0)
             {
-                lStringsValidas.Add(sStringPontuacao);
+                lStringsValidas.Add(sStringPontuacao);//ao final, adiciona a string à lista de strings pontuadas.
             }
             return iTotalLetras / 2;
         }
 
+        /// <summary>
+        /// Função para desabilitar um botão que já foi pontuado.
+        /// </summary>
+        /// <param name="sCoord"></param>
         private void FechaBotao(string sCoord)
         {
             switch (sCoord)
@@ -286,6 +299,13 @@ namespace Trabalho_2
                     break;
             }
         }
+
+        /// <summary>
+        /// Função para checar se o caminho entre duas coordenadas é possível.
+        /// </summary>
+        /// <param name="sCoord1"></param>
+        /// <param name="sCoord2"></param>
+        /// <returns></returns>
         private bool ChecaCoordenadas(string sCoord1, string sCoord2)
         {
             int iCoord00 = Convert.ToInt32(sCoord1[0]);
@@ -303,6 +323,9 @@ namespace Trabalho_2
             }
         }
 
+        /// <summary>
+        /// Função para limpar a tabela.
+        /// </summary>
         private void NewTable()
         {
             btn00.ForeColor = SystemColors.ControlText;
@@ -318,11 +341,18 @@ namespace Trabalho_2
             lCoords = new List<string>();
         }
 
+        /// <summary>
+        /// Função para iniciar uma nova rodada, mantendo a pontuação
+        /// </summary>
         private void NewGamePlus()
         {
             NewTable();
             GeraMatriz();
         }
+
+        /// <summary>
+        /// Função para iniciar um novo jogo, reiniciando a tabela de pontos.
+        /// </summary>
         private void NewGame()
         {
             NewTable();
@@ -331,9 +361,14 @@ namespace Trabalho_2
             TabelaPontos(0, true);
         }
 
+        /// <summary>
+        /// Função para mudar a cor de um botão, quando for selecionado.
+        /// </summary>
+        /// <param name="btn"></param>
+        /// <returns></returns>
         private bool ChangeColor(Button btn)
         {
-            if (btn.ForeColor == Color.Red)
+            if (btn.ForeColor == Color.Red) //Caso o botão esteja "desabilitado", não poderá mais ser selecionado até a próxima rodada
             {
                 return false;
             }
@@ -341,7 +376,7 @@ namespace Trabalho_2
             if (btn.ForeColor == SystemColors.ControlText)
             {
                 btn.ForeColor = Color.Green;
-                txtProcura.Text = txtProcura.Text + btn.Text;
+                txtProcura.Text = txtProcura.Text + btn.Text;//Adiciona a letra à string.
                 return true;
             }
             else
@@ -352,13 +387,17 @@ namespace Trabalho_2
                 return false;
             }
         }
+
+        /// <summary>
+        /// Função para gerar a matriz do jogo, conforme as regras.
+        /// </summary>
         private void GeraMatriz()
         {
             mJogo = new char[3, 3];
 
             for (int i = 0; i < 9; i++)
             {
-                Random rand = new Random(DateTime.Now.Millisecond);
+                Random rand = new Random(DateTime.Now.Millisecond);//Iniciado com uma seed, pois estava gerando resultados muito semelhantes.
                 char c = 'a';
                 int j = 0;
 
@@ -366,7 +405,7 @@ namespace Trabalho_2
                 {
                     case 0:
 
-                        j = rand.Next(1, 100 + 1);
+                        j = rand.Next(1, 100 + 1);//Uma variação maior, mas continua sendo 50%, pois nos testes com um random de 1 à 2 (ou 3), os resultados voltavam quase sempre iguais.
                         if (j <= 50)
                         {
                             c = 'A';
@@ -528,7 +567,11 @@ namespace Trabalho_2
         }
 
 
-
+        /// <summary>
+        /// Função para checar se a letra está dentro da matriz, retorna a coordenada no formato string. Se não encontrá-la, retorna "-1" no formato string.
+        /// </summary>
+        /// <param name="sLetra"></param>
+        /// <returns></returns>
         private string ProcuraLetra(string sLetra)
         {
             for (int i = 0; i < 3; i++)
